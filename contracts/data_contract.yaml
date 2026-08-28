@@ -1,0 +1,38 @@
+# Data Contract - Feature: qtd_transacoes_24h
+feature_name: qtd_transacoes_24h
+description: Quantidade total de transações realizadas por um cliente nas últimas 24 horas.
+
+schema:
+  - name: user_id
+    type: string
+    nullable: false
+  - name: qtd_transacoes_24h
+    type: integer
+    nullable: false
+  - name: timestamp
+    type: datetime
+    nullable: false
+
+sla:
+  update_latency: "5 minutos"
+  freshness_check: "a cada 5 minutos"
+  max_delay_tolerance: "10 minutos"
+
+owner:
+  team: dados_risco
+  contact: dados_risco@fintech.com
+
+quality_rules:
+  - rule: "qtd_transacoes_24h >= 0"
+    description: "Valores negativos são inválidos."
+  - rule: "qtd_transacoes_24h <= 500"
+    description: "Valores acima de 500 são considerados outliers."
+  - rule: "timestamp não pode ser nulo"
+    description: "Garantir integridade temporal."
+
+violation_policy:
+  alert_channel: "Slack #monitoramento-dados"
+  action_on_violation:
+    - "Gerar alerta automático"
+    - "Marcar feature como inválida"
+    - "Bloquear consumo pelo modelo até correção"
