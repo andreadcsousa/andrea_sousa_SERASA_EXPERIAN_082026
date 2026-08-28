@@ -11,30 +11,20 @@ resources:
     fraud_pipeline:
       name: fraud_pipeline
 
-      job_clusters:
-        - job_cluster_key: default_cluster
-          new_cluster:
-            spark_version: 13.3.x-scala2.12
-            node_type_id: Standard_DS3_v2
-            num_workers: 2
-
       tasks:
         - task_key: ingestao
-          job_cluster_key: default_cluster
           notebook_task:
             notebook_path: notebooks/ingestao.py
 
         - task_key: transformacao
           depends_on:
             - task_key: ingestao
-          job_cluster_key: default_cluster
           notebook_task:
             notebook_path: notebooks/transformacao.py
 
         - task_key: quality_gate
           depends_on:
             - task_key: transformacao
-          job_cluster_key: default_cluster
           notebook_task:
             notebook_path: notebooks/quality_gate.py
             base_parameters:
@@ -51,11 +41,3 @@ targets:
     mode: production
     workspace:
       root_path: /Workspace/Users/andrea.dcsousa@gmail.com/.bundle/${bundle.name}/${bundle.target}
-    resources:
-      jobs:
-        fraud_pipeline:
-          job_clusters:
-            - job_cluster_key: default_cluster
-              new_cluster:
-                node_type_id: Standard_DS4_v2
-                num_workers: 4
