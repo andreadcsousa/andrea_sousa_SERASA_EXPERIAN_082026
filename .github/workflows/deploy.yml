@@ -19,21 +19,25 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Instalar dependências
+      - name: Instalar Databricks CLI oficial
         run: |
-          pip install databricks-cli pytest
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      - name: Instalar dependências Python
+        run: |
+          pip install pytest
 
       - name: Rodar testes unitários
         run: pytest tests/
 
-      - name: Validar bundle
+      - name: Deploy do Bundle
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-        run: databricks bundle validate
-
-      - name: Deploy em produção
         run: databricks bundle deploy --target prod
 
-      - name: Executar job
+      - name: Executar Pipeline (Opcional)
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
         run: databricks bundle run --target prod
