@@ -11,7 +11,6 @@ Definir regras para garantir que os dados utilizados pelos sistemas estejam no f
 
 - `data_contract.json` → contrato em formato JSON, facilitando seu uso por sistemas;
 - `data_contract.yaml` → mesma definição em formato YAML, mais fácil de ler e revisar;
-- `fluxo_validacao.png` → diagrama mostrando as etapas da validação;
 - `validate_contract.py` → script em Python para verificar se os dados atendem às regras definidas;
 - `validate_contract.sql` → versão da validação utilizando SQL.
 
