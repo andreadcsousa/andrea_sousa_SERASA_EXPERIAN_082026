@@ -44,9 +44,13 @@ targets:
   dev:
     mode: development
     default: true
+    workspace:
+      root_path: /Workspace/Users/andrea.dcsousa@gmail.com/.bundle/${bundle.name}/${bundle.target}
 
   prod:
     mode: production
+    workspace:
+      root_path: /Workspace/Users/andrea.dcsousa@gmail.com/.bundle/${bundle.name}/${bundle.target}
     resources:
       jobs:
         fraud_pipeline:
