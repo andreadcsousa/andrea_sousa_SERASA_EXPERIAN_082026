@@ -16,7 +16,7 @@ A base possui milhares de registros e colunas numéricas, categóricas e tempora
 - Linhas: **14.446 registros iniciais**;
 - Nulos: **Nenhum valor ausente identificado**;
 - Duplicados: **63 registros removidos**;
-- Inconsistências: **`is_fraud` ajustado para valores binários (0/1)**.
+- Inconsistências: **is_fraud ajustado para valores binários (0/1)**.
 
 ### 2. Distribuição de fraudes
 

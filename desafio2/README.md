@@ -30,8 +30,8 @@ WITH
   submission_totals AS (SELECT ... FROM Submission_Stats ...)
 SELECT
 ...
-LEFT JOIN view_totals vt ON ch.challenge_id = vt.challenge_id
-LEFT JOIN submission_totals st ON ch.challenge_id = st.challenge_id
+LEFT JOIN submission_totals ss ON ch.challenge_id = ss.challenge_id
+LEFT JOIN view_totals vs ON ch.challenge_id = vs.challenge_id
 ```
 
 > [!NOTE]

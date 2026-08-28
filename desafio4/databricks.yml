@@ -1,0 +1,53 @@
+bundle:
+  name: fraud_pipeline
+
+parameters:
+  quality_threshold:
+    description: "Percentual mínimo de qualidade exigido"
+    default: 0.95
+
+resources:
+  jobs:
+    fraud_pipeline:
+      name: ${bundle.target == 'prod' && 'fraud_pipeline' || '[dev] fraud_pipeline'}
+
+      job_clusters:
+        - job_cluster_key: default_cluster
+          new_cluster:
+            spark_version: 13.3.x-scala2.12
+            node_type_id: ${bundle.target == 'prod' && 'Standard_DS4_v2' || 'Standard_DS3_v2'}
+            num_workers: ${bundle.target == 'prod' && 4 || 2}
+
+      tasks:
+        - task_key: ingestao
+          job_cluster_key: default_cluster
+          notebook_task:
+            notebook_path: notebooks/ingestao.py
+
+        - task_key: transformacao
+          depends_on:
+            - task_key: ingestao
+          job_cluster_key: default_cluster
+          notebook_task:
+            notebook_path: notebooks/transformacao.py
+
+        - task_key: quality_gate
+          depends_on:
+            - task_key: transformacao
+          job_cluster_key: default_cluster
+          notebook_task:
+            notebook_path: notebooks/quality_gate.py
+            base_parameters:
+              threshold: ${bundle.parameters.quality_threshold}
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: ${env.DATABRICKS_HOST}
+
+  prod:
+    mode: production
+    workspace:
+      host: ${env.DATABRICKS_HOST}
