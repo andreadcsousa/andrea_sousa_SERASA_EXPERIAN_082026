@@ -19,10 +19,26 @@ resources:
             num_workers: 2
 
       tasks:
-        - task_key: pipeline_task
+        - task_key: ingestao
           job_cluster_key: default_cluster
-          spark_python_task:
-            python_file: ../contracts/validate_contract.py
+          notebook_task:
+            notebook_path: notebooks/ingestao.py
+
+        - task_key: transformacao
+          depends_on:
+            - task_key: ingestao
+          job_cluster_key: default_cluster
+          notebook_task:
+            notebook_path: notebooks/transformacao.py
+
+        - task_key: quality_gate
+          depends_on:
+            - task_key: transformacao
+          job_cluster_key: default_cluster
+          notebook_task:
+            notebook_path: notebooks/quality_gate.py
+            base_parameters:
+              threshold: ${var.quality_threshold}
 
 targets:
   dev:
