@@ -31,13 +31,8 @@ jobs:
         run: pytest tests/
 
       - name: Deploy do Bundle
+        working-directory: ./desafio4
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
         run: databricks bundle deploy --target prod
-
-      - name: Executar Pipeline (Opcional)
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-        run: databricks bundle run --target prod

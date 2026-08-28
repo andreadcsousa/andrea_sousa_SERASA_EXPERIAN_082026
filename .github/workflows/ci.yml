@@ -30,7 +30,8 @@ jobs:
       - name: Rodar testes unitários
         run: pytest tests/
 
-      - name: Validar bundle em dev
+      - name: Validar bundle em devv
+        working-directory: ./desafio4
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
