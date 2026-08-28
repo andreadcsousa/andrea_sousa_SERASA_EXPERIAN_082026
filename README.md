@@ -41,52 +41,7 @@ A narrativa segue quatro etapas:
 
 ### Visão Geral da Arquitetura
 
-```mermaid
-flowchart TD
-    %% Estilos das Caixas
-    classDef bronze fill:#b87333,stroke:#333,stroke-width:1px,color:#fff;
-    classDef silver fill:#708090,stroke:#333,stroke-width:1px,color:#fff;
-    classDef gold fill:#daa520,stroke:#333,stroke-width:1px,color:#fff;
-    classDef featureStore fill:#2e8b57,stroke:#333,stroke-width:1px,color:#fff;
-    classDef serving fill:#1e90ff,stroke:#333,stroke-width:1px,color:#fff;
-    classDef obs fill:#f8f9fa,stroke:#ccc,stroke-width:1px,color:#333;
-
-    subgraph Streaming ["Ingestão Near-Real-Time"]
-        A1[⚡ Kafka / Stream] --> B1[Camada Bronze<br/>Dados Brutos Stream]
-        B1 --> C1[Camada Silver<br/>Processamento Near-Real-Time]
-    end
-
-    subgraph Batch ["Ingestão Batch"]
-        A2[📁 Arquivos / SGBD] --> B2[Camada Bronze<br/>Dados Brutos Batch]
-        B2 --> C2[Camada Silver<br/>Processamento Diário]
-        C2 --> D2[Camada Gold<br/>Camada Analítica]
-    end
-
-    subgraph FS ["Feature Store Híbrida"]
-        FEAT[Features Críticas<br/><code>valor_7d</code>, <code>qtd_24h</code>, <code>score_behav</code>]
-    end
-
-    C1 <--> FEAT
-    C2 <--> FEAT
-
-    FEAT --> ML[🤖 Serviço de ML - Online Serving<br/>Modelo de Propensão à Inadimplência]
-    D2 --> DASH[📊 Dashboards de Negócio<br/>SLA: Atualização em até 1h]
-
-    subgraph Observabilidade ["Observabilidade & Qualidade"]
-        direction LR
-        O1[🔔 Alertas] --- O2[✅ Testes de Qualidade] --- O3[⏱️ Monitoramento SLA]
-    end
-
-    ML --- Observabilidade
-    DASH --- Observabilidade
-
-    class B1,B2 bronze;
-    class C1,C2 silver;
-    class D2 gold;
-    class FEAT featureStore;
-    class ML,DASH serving;
-    class Observabilidade,O1,O2,O3 obs;
-```
+![](/mermaid-diagram-1.png)
 
 A arquitetura proposta é **híbrida**, combinando processamento _near-real-time_ para features críticas e _batch diário_ para features históricas. Organiza-se nas camadas **bronze → silver → gold**, com integração à **Feature Store** e consumo por modelos de ML e dashboards analíticos.
 
@@ -172,24 +127,7 @@ Esses scripts aplicam as regras de qualidade e monitoram violações de SLA.
 
 ### Fluxo de Validação Automática
 
-```mermaid
-flowchart TD
-    classDef step fill:#2b2b2b,stroke:#555,stroke-width:1px,color:#fff;
-    classDef decision fill:#1f2937,stroke:#4b5563,stroke-width:2px,color:#fff;
-    classDef success fill:#134e4a,stroke:#28a745,stroke-width:2px,color:#ecfdf5;
-    classDef danger fill:#7f1d1d,stroke:#dc3545,stroke-width:2px,color:#fef2f2;
-
-    A[📥 Dados Ingeridos] --> B[📄 Ler Data Contract]
-    B --> C{🔍 Checagem de Conformidade<br/>• Schema<br/>• Regras de Qualidade<br/>• SLA & Latência}
-
-    C -->|✅ Aprovado| D[🟢 Dados Aprovados<br/>Seguem para Consumo]
-    C -->|❌ Violação Detectada| E[🔴 Violação Detectada<br/>• Alerta Automático<br/>• Log de Erro<br/>• Ação Corretiva]
-
-    class A,B step;
-    class C decision;
-    class D success;
-    class E danger;
-```
+![](/mermaid-diagram-2.png)
 
 ### Principais Pontos
 
