@@ -1,6 +1,7 @@
 name: CI Databricks Bundle
 
 on:
+  workflow_dispatch:
   pull_request:
     branches:
       - main
