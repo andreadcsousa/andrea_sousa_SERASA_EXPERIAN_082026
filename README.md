@@ -283,6 +283,11 @@ O **DAG** foi estruturado com dependências explícitas entre as tarefas:
 
 `ingestão → transformação → quality gate → notificação`
 
+- **Ingestão:** caminho do arquivo configurável via Airflow Variable (`fraud_data_path`), com fallback padrão caso a variável não esteja cadastrada;
+- **Transformação:** aplica a mesma lógica de limpeza do `is_fraud` usada no desafio 3 (conversão para numérico e remoção de registros inválidos);
+- **Quality Gate:** falha o DAG se a taxa de fraude estiver fora do intervalo configurável (0,1% a 20%);
+- **Notificação:** callback `on_failure_callback` aplicado a todas as tasks via `default_args`, registrando a task que falhou.
+
 Durante a execução, alguns ajustes foram necessários:
 
 - Inicialização do banco de metadados (**airflow db init**) e criação de usuário admin;

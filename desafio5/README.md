@@ -8,10 +8,10 @@ Demonstrar familiaridade com ferramentas de orquestração além de **Databricks
 
 ## Lógica da Solução
 
-- Ingestão: simulação da chegada do arquivo fraud_data.csv;
-- Transformação: script Python equivalente às transformações dos desafios anteriores;
+- Ingestão: caminho do arquivo configurável via Airflow Variable (`fraud_data_path`), acessível em Admin → Variables na UI do Airflow. Se a variável não estiver cadastrada, usa o caminho padrão como fallback;
+- Transformação: aplica a mesma lógica de limpeza do `is_fraud` usada no desafio 3 (conversão para numérico via `pd.to_numeric` e remoção de registros inválidos);
 - Quality Gate: falha o DAG se a taxa de fraude estiver fora do intervalo configurável (0,1% a 20%);
-- Notificação: callback de sucesso ou falha;
+- Notificação: `on_failure_callback` aplicado via `default_args`, registrando a task que falhou em caso de erro;
 - Dependências: ingestão → transformação → quality gate → notificação.
 
 ## Bugs e Ajustes Necessários
@@ -71,3 +71,14 @@ Ao rodar `docker-compose up -d`, o container automaticamente inicializa o banco 
 
 > [!TIP]
 > Ative o toggle da DAG **`fraud_pipeline_dag`** e clique em Play ▶ para testar.
+
+### Configurando a Variable de Ingestão (opcional)
+
+Por padrão, a task de ingestão usa o caminho `/opt/airflow/dags/fraud_data.csv`. Para customizar sem alterar código:
+
+1. Acesse **Admin → Variables** na UI do Airflow;
+2. Clique em **+** para adicionar uma nova variável;
+3. Preencha:
+   - **Key:** `fraud_data_path`
+   - **Val:** caminho desejado
+4. Salve. A próxima execução da DAG usará o novo caminho automaticamente.
