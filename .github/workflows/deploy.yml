@@ -30,9 +30,23 @@ jobs:
       - name: Rodar testes unitários
         run: pytest tests/
 
+      - name: Validar bundle
+        working-directory: ./desafio4
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: databricks bundle validate --target prod
+
       - name: Deploy do Bundle
         working-directory: ./desafio4
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
         run: databricks bundle deploy --target prod
+
+      - name: Rodar o job em produção
+        working-directory: ./desafio4
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: databricks bundle run fraud_pipeline --target prod

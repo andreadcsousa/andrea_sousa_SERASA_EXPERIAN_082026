@@ -12,11 +12,14 @@ Automatizar a implantação de jobs no Databricks, garantindo qualidade, seguran
 
 O arquivo databricks.yml utiliza a estrutura moderna de Databricks Asset Bundles (DAB) declarando os recursos sob a chave resources.jobs:
 
-- **Job Cluster Otimizado:** Utiliza reuso de cluster computacional via job_cluster_key, com dimensionamento e número de workers parametrizados automaticamente por ambiente (dev vs prod);
-- Tasks Encadeadas (notebook_task):
-  1. **ingestao** → Leitura dos dados brutos;
-  2. **transformacao** → Limpeza, enriquecimento e feature engineering (depende de ingestao);
-  3. **quality_gate** → Validação de métricas e limites de qualidade (depende de transformacao), recebendo o parâmetro dinâmico threshold via base_parameters.
+> [!IMPORTANT]
+> **Compute:** Para o escopo deste case, os jobs usam o compute padrão do workspace (serverless); em um cenário de produção real, o próximo passo seria parametrizar **job_clusters** por ambiente.
+
+**Tasks Encadeadas** (`notebook_task`):
+
+1. **ingestao** → Leitura dos dados brutos;
+2. **transformacao** → Limpeza, enriquecimento e feature engineering (depende de ingestao);
+3. **quality_gate** → Validação de métricas e limites de qualidade (depende de transformacao), recebendo o parâmetro dinâmico threshold via base_parameters.
 
 ### 2. Separação de Ambientes
 

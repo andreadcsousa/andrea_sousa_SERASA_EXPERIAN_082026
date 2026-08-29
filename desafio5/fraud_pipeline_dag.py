@@ -1,15 +1,25 @@
 from datetime import datetime
 from airflow import DAG
+from airflow.models import Variable
 from airflow.operators.python import PythonOperator
 import pandas as pd
 
 
 def ingestao():
-    print("Simulando ingestão do fraud_data.csv...")
+    path = Variable.get(
+        "fraud_data_path", default_var="/opt/airflow/dags/fraud_data.csv"
+    )
+    print(f"Simulando ingestão do arquivo em: {path}")
 
 
 def transformacao():
-    print("Executando transformações em Python...")
+    path = Variable.get(
+        "fraud_data_path", default_var="/opt/airflow/dags/fraud_data.csv"
+    )
+    df = pd.read_csv(path)
+    df["is_fraud"] = pd.to_numeric(df["is_fraud"], errors="coerce")
+    df = df.dropna(subset=["is_fraud"])
+    print(f"Transformação concluída: {len(df)} registros válidos após limpeza.")
 
 
 def quality_gate():

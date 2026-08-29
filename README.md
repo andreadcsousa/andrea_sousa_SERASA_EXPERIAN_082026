@@ -14,6 +14,7 @@ A narrativa segue quatro etapas:
 - [Case Técnico: Engenheira de Analytics Plena](#case-técnico-engenheira-de-analytics-plena)
   - [1 Arquitetura de Dados](#1-arquitetura-de-dados)
     - [Visão Geral da Arquitetura](#visão-geral-da-arquitetura)
+    - [Ferramentas por Componente](#ferramentas-por-componente)
     - [Data Contract: Feature Near‑Real‑Time](#data-contract-feature-nearrealtime)
     - [Observabilidade e SLAs por Camada](#observabilidade-e-slas-por-camada)
     - [Validação Automática](#validação-automática)
@@ -45,7 +46,18 @@ A narrativa segue quatro etapas:
 
 A arquitetura proposta é **híbrida**, combinando processamento _near-real-time_ para features críticas e _batch diário_ para features históricas. Organiza-se nas camadas **bronze → silver → gold**, com integração à **Feature Store** e consumo por modelos de ML e dashboards analíticos.
 
----
+### Ferramentas por Componente
+
+| Componente                             | Ferramenta                               | Justificativa                                                                                                                                                                                                         |
+| -------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ingestão streaming                     | Kafka                                    | Padrão de mercado para eventos em near-real-time; desacopla produtores e consumidores, permitindo escalar cada lado de forma independente.                                                                            |
+| Processamento (bronze → silver → gold) | Databricks / Apache Spark                | Unifica processamento batch e streaming no mesmo ecossistema, evitando manter duas stacks separadas para os dois fluxos.                                                                                              |
+| Feature Store                          | Databricks Feature Store (Unity Catalog) | Garante que a mesma lógica de cálculo de feature usada no treino do modelo seja usada em produção, evitando skew entre treino e inferência. Também oferece online store de baixa latência para consumo em tempo real. |
+| Orquestração do batch diário           | Apache Airflow                           | Já validado no desafio 5; agenda e monitora dependências entre tarefas de forma confiável, com tratamento explícito de falhas.                                                                                        |
+| Camada analítica / Dashboards          | Power BI / Metabase                      | Conectam diretamente à camada Gold; ferramentas já consolidadas para consumo de negócio.                                                                                                                              |
+
+> [!NOTE]
+> A escolha priorizou ferramentas já presentes no ecossistema do case (Databricks, Airflow) para reduzir complexidade operacional, em vez de introduzir novas ferramentas sem ganho claro de valor.
 
 ### Data Contract: Feature Near‑Real‑Time
 
@@ -109,7 +121,8 @@ violation_policy:
 
 Para garantir confiabilidade na tomada de decisão e no consumo pelo modelo de ML, a pipeline foi projetada com regras claras de observabilidade:
 
-- **SLA de Features Near-Real-Time:** Latência máxima de atualização de **5 minutos** e tolerancia máxima de delay de 10 minutos. Falhas disparam alertas imediatos via Slack e bloqueiam o consumo da feature pelo modelo;
+- **SLA de Features Near-Real-Time:** Latência máxima de atualização de **5 minutos**;
+- **SLA de Features Históricas (Batch):** Atualização diária (**24h**), sem necessidade de alerta imediato — features como `renda_estimada` e `tempo_relacionamento_meses` têm baixa volatilidade e não exigem monitoramento de latência tão rígido quanto as features near-real-time;
 - **SLA de Dashboards Analíticos:** Atualização em janela batch de **1 hora**;
 - **Estratégia de Testes por Camada:**
   - **Camada Bronze:** Validação de schema, nulos e conformidade com o Data Contract via `validate_contract.py` / `.sql`;
@@ -157,18 +170,12 @@ Nessa parte do case, o objetivo foi resolver um desafio técnico inspirado em en
 
 ```sql
 WITH view_totals AS (
-    SELECT
-        challenge_id,
-        SUM(total_views) AS total_views,
-        SUM(total_unique_views) AS total_unique_views
+    SELECT challenge_id, SUM(total_views) AS total_views, SUM(total_unique_views) AS total_unique_views
     FROM View_Stats
     GROUP BY challenge_id
 ),
 submission_totals AS (
-    SELECT
-        challenge_id,
-        SUM(total_submissions) AS total_submissions,
-        SUM(total_accepted_submissions) AS total_accepted_submissions
+    SELECT challenge_id, SUM(total_submissions) AS total_submissions, SUM(total_accepted_submissions) AS total_accepted_submissions
     FROM Submission_Stats
     GROUP BY challenge_id
 )
@@ -184,11 +191,12 @@ JOIN Challenges ch ON cl.college_id = ch.college_id
 LEFT JOIN submission_totals ss ON ch.challenge_id = ss.challenge_id
 LEFT JOIN view_totals vs ON ch.challenge_id = vs.challenge_id
 GROUP BY ct.contest_id, ct.hacker_id, ct.name
+-- Só mostra contests em que pelo menos uma métrica é > 0
 HAVING
-    SUM(COALESCE(ss.total_submissions, 0)) +
-    SUM(COALESCE(ss.total_accepted_submissions, 0)) +
-    SUM(COALESCE(vs.total_views, 0)) +
-    SUM(COALESCE(vs.total_unique_views, 0)) > 0
+       SUM(COALESCE(ss.total_submissions, 0))
+    +  SUM(COALESCE(ss.total_accepted_submissions, 0))
+    +  SUM(COALESCE(vs.total_views, 0))
+    +  SUM(COALESCE(vs.total_unique_views, 0)) > 0
 ORDER BY ct.contest_id;
 ```
 
@@ -228,10 +236,10 @@ A análise comparativa da distribuição de valores entre transações legítima
 
 Para enriquecer a detecção de anomalias, foram criadas 4 features preditivas:
 
-- **`is_night_transaction`**: Flag binária isolando o horário de pico crítico (22h às 03h, em que a taxa de fraude atinge até 28,92%);
-- **`distance_merch_user`**: Distância em km (fórmula de Haversine) entre a localização do cliente e do estabelecimento;
+- **`is_risk_hour`**: Flag binária isolando o horário de pico crítico (22h às 03h, em que a taxa de fraude atinge até 28,92%);
+- **`distance_km`**: Distância em km (fórmula de Haversine) entre a localização do cliente e do estabelecimento;
 - **`amt_to_cat_avg_ratio`**: Razão do valor gasto sobre a média da categoria para destacar transações atípicas em segmentos de menor ticket;
-- **`customer_age`**: Idade do titular para análise demográfica de vulnerabilidade.
+- **`age`**: Idade do titular no momento da transação, para análise demográfica de vulnerabilidade.
 
 ### Resultado
 
@@ -251,7 +259,7 @@ Nessa parte do case, o objetivo foi configurar um pipeline de CI/CD para Databri
 
 ### Estratégia
 
-- Definição do workflow no **databricks.yml** utilizando Databricks Asset Bundles (DAB v2) sob resources.jobs e Job Clusters parametrizados dinamicamente por ambiente (dev vs prod);
+- Definição do workflow no **databricks.yml** utilizando Databricks Asset Bundles (DAB v2) sob resources.jobs, com compute padrão do workspace (serverless) e nomes de job distintos por ambiente (`[dev] fraud_pipeline` vs `fraud_pipeline`);
 - **Tasks encadeadas:** Ingestão → Transformação → Quality Gate (com passagem de parâmetro threshold);
 - **Pipeline de Produção (deploy.yml) disparado em push na main:** Testes Unitários (pytest) → Validate → Deploy → Run em prod;
 - **Pipeline de Pull Request (ci.yml) disparado em PRs:** Testes Unitários → Validate em dev (sem alterar o ambiente de produção).
@@ -260,8 +268,10 @@ Nessa parte do case, o objetivo foi configurar um pipeline de CI/CD para Databri
 
 - Arquivos criados:
   - [/desafio4/databricks.yml](/desafio4/databricks.yml)
+  - [/desafio4/notebooks/](/desafio4/notebooks/) (ingestao.py, transformacao.py, quality_gate.py)
   - [/.github/workflows/deploy.yml](/.github/workflows/deploy.yml)
   - [/.github/workflows/ci.yml](/.github/workflows/ci.yml)
+  - [/tests/teste_pipeline.py](/tests/teste_pipeline.py)
 
 ## 5 Pipeline Orquestrado
 

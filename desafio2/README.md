@@ -32,6 +32,7 @@ SELECT
 ...
 LEFT JOIN submission_totals ss ON ch.challenge_id = ss.challenge_id
 LEFT JOIN view_totals vs ON ch.challenge_id = vs.challenge_id
+...
 ```
 
 > [!NOTE]
@@ -56,10 +57,11 @@ LEFT JOIN view_totals vs ON ch.challenge_id = vs.challenge_id
 - Usei `HAVING` com a soma de todas as métricas:
 
   ```sql
-  HAVING SUM(COALESCE(st.total_submissions, 0))
-       + SUM(COALESCE(st.total_accepted_submissions, 0))
-       + SUM(COALESCE(vt.total_views, 0))
-       + SUM(COALESCE(vt.total_unique_views, 0)) > 0
+  HAVING
+         SUM(COALESCE(ss.total_submissions, 0))
+      +  SUM(COALESCE(ss.total_accepted_submissions, 0))
+      +  SUM(COALESCE(vs.total_views, 0))
+      +  SUM(COALESCE(vs.total_unique_views, 0)) > 0
   ```
 
 > [!NOTE]

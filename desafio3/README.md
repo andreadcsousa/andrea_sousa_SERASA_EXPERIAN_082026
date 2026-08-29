@@ -70,6 +70,14 @@ Flag binária (0 ou 1) que isola transações ocorridas na janela crítica ident
 > **Justificativa:**
 > Facilita o aprendizado do modelo de ML ao destacar o indicador temporal mais correlacionado ao comportamento criminoso.
 
+`Razão Valor/Média da Categoria:`
+
+Razão entre o valor da transação e o valor médio de todas as transações daquela categoria (`amt_to_cat_avg_ratio`).
+
+> [!TIP]
+> **Justificativa:**
+> Destaca transações atípicas dentro do próprio segmento — por exemplo, uma compra de R$ 300 é normal em `shopping_pos`, mas muito acima da média em `gas_transport`. A razão captura esse desvio relativo, que o valor absoluto sozinho não mostra.
+
 ### 5. Query analítica
 
 Resultado da consulta analítica consolidando os 5 segmentos de mercado com maior taxa de incidência de fraude e o respectivo valor médio do prejuízo por transação:

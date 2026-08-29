@@ -5,6 +5,7 @@ Este diretório contém os arquivos utilizados para definir e validar um **Data 
 ## Objetivo
 
 Garantir interoperabilidade, governança e rastreabilidade das features consumidas em produção, tanto em batch quanto em streaming.
+
 Definir regras para garantir que os dados utilizados pelos sistemas estejam no formato esperado e atendam aos critérios de qualidade estabelecidos.
 
 ## Estrutura
